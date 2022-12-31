@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.1.1/chart.umd.js"></script>
+    <link rel="stylesheet" href="static/style.css" />
+    {% block script %}{% endblock %}
+    <title>IA</title>
+  </head>
+  <body>
+    <header>
+      <div>
+        <div id="logo_container">
+          <img src="static/logo_espol.png" alt="Logo de Espol" />
+          <p>
+            Escuela Superior <br />
+            Politécnica del Litoral
+          </p>
+        </div>
+        <nav>
+          <ul>
+            <li><a href="/">Clase</a></li>
+            <li><a href="{{ url_for('registros') }}">Registros</a></li>
+            <li><a href="{{ url_for('graficos') }}">Graficos</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+    <main>{% block content %}{% endblock %}</main>
+  </body>
+</html>

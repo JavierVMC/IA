@@ -114,14 +114,18 @@ ax.set_xlabel("Épocas")
 ax.set_ylabel("Loss")
 plt.savefig("lineplot.png")
 
+
+# Guarda el modelo en archivo h5
 model.save('modelo.h5')
 
+# Grafico de la arquitectura del modelo
 tf.keras.utils.plot_model(model, to_file="modelo.png",
                           show_shapes=True, show_layer_names=True)
 
 
 test_dir = '../Data/test_eyes'
 
+# Dataset de imagenes de prueba
 test_ds = tf.keras.utils.image_dataset_from_directory(
     test_dir,
     labels='inferred',
@@ -131,6 +135,7 @@ test_ds = tf.keras.utils.image_dataset_from_directory(
     batch_size=batch_size)
 
 
+# Array de labels
 Y_test = np.array([])
 for image_batch, labels_batch in test_ds:
     labels = np.array(labels_batch)

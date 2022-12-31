@@ -1,0 +1,21 @@
+{% extends 'index.html' %} {% block content %}
+<h1>Detector de estudiantes dormidos</h1>
+<section id="video_section">
+  <div id="realtime_video">
+    {% if videoStart %}
+    <img src="{{ url_for('video') }}" />
+    {% endif %}
+  </div>
+  <div id="video_controls">
+    <form action="{{ url_for('index') }}" method="post">
+      {% if videoStart %}
+      <input type="text" value="0" name="variable" class="hidden" />
+      <button id="videoEnd" type="submit">Terminar video</button>
+      {% else %}
+      <input type="text" value="1" name="variable" class="hidden" />
+      <button id="videoStart" type="submit">Iniciar video</button>
+      {% endif %}
+    </form>
+  </div>
+</section>
+{% endblock %}

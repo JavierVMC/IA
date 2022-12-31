@@ -1,0 +1,11 @@
+{% extends 'index.html' %} {% block script %}
+<script>
+  var registers = '{{ registers|tojson }}';
+</script>
+<script src="static/charts.js" defer></script>
+{% endblock %} {% block content %}
+<h1>Graficos</h1>
+<section id="charts_section">
+  <canvas id="bar_chart"></canvas>
+</section>
+{% endblock %}
