@@ -1,147 +1,118 @@
-import json
-import cv2
-from flask import Flask, render_template, Response, request, redirect, flash, url_for
-import numpy as np
-import tensorflow as tf
-from tensorflow import keras
-from keras.models import load_model
-from tensorflow.python.keras.saving import hdf5_format
-from tensorflow.python.keras.saving.saved_model import load as saved_model_load
-import h5py
-import datetime
-import random
+from flask import Flask, render_template, Response, request
+from flask_mysqldb import MySQL
+import yaml
+from functions import registers, generate
 
-# Datos de simulacion
-horarios = ['7:00 - 9:00', '9:00 - 11:00',
-            '11:00 - 13:00', '14:00 - 16:00', '16:00 - 18:00']
-carreras = ['Computación', 'Electricidad', 'Telemática',
-            'Electrónica y Automatización', 'Telecomunicaciones']
-cursos = ['Inteligecia Artificial', 'Ingenieria de Software',
-          'Redes de datos', 'Sistemas Operativos']
-# Conteo
-abiertos = 0
-cerrados = 0
-registers = [dict(hora='12:34:23',
-                  fecha='12/12/2022',
-                  curso='Inteligencia Artificial',
-                  paralelo=2,
-                  horario='11:00 - 13:00',
-                  carrera='Computación',
-                  facultad='FIEC')]
-
-# Reconocimiento de ojos
-model = tf.keras.models.load_model('modelo.h5', custom_objects={
-                                   'Functional': tf.keras.models.Model})
-
-faceCascade = cv2.CascadeClassifier(
-    cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
-
-eye_cascade = cv2.CascadeClassifier(
-    cv2.data.haarcascades + "haarcascade_eye.xml")
-
-
-def detect_face(frame):
-    faces = faceCascade.detectMultiScale(frame, 1.1, 7)
-    return faces
-
-
-def detect_eyes(roi_gray):
-    eyes = eye_cascade.detectMultiScale(roi_gray)
-    return eyes
-
-
-def classify(eye_img):
-    img_preprocessed = cv2.resize(eye_img, (180, 180))
-    img_preprocessed = np.expand_dims(img_preprocessed, axis=0)
-    prediction = model(img_preprocessed)
-    return np.argmax(prediction[0])
-
-
-def saveToRegisters():
-    global registers
-    current_time = datetime.datetime.now()
-    time = f"{current_time.hour}:{current_time.minute}:{current_time.second}"
-    date = f"{current_time.day}/{current_time.month}/{current_time.year}"
-    data = dict(hora=time,
-                fecha=date,
-                curso=cursos[random.randint(0, len(cursos) - 1)],
-                paralelo=random.randint(1, 9),
-                horario=horarios[random.randint(0, len(horarios) - 1)],
-                carrera=carreras[random.randint(0, len(carreras) - 1)],
-                facultad='FIEC')
-    registers.append(data)
-    print(registers)
-
-
-def generate():
-    global abiertos
-    global cerrados
-    cap = cv2.VideoCapture(0)
-    while True:
-        success, frame = cap.read()
-        if not success:
-            break
-        else:
-            faces = detect_face(frame)
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            for (x, y, w, h) in faces:
-                cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
-                roi_gray = gray[y:y+h, x:x+w]
-                roi_color = frame[y:y+h, x:x+w]
-                eyes = detect_eyes(roi_gray)
-                for (ex, ey, ew, eh) in eyes:
-                    eyes_roi = roi_color[ey:ey+eh, ex:ex+ew]
-                    cv2.rectangle(roi_color, (ex, ey),
-                                  (ex+ew, ey+eh), (0, 255, 0), 2)
-                    if classify(eyes_roi) == 1:
-                        cerrados = cerrados + 1
-                        saveToRegisters()
-                    else:
-                        abiertos = abiertos + 1
-                print(f'Abiertos: {abiertos}')
-                print(f'Cerrados: {cerrados}')
-
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame = buffer.tobytes()
-            yield(b'--frame\r\n'
-                  b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-    cap.release()
-
-
-# Creación de app
-
+# App creation
 app = Flask(__name__, template_folder='templates', static_folder='static')
 app.secret_key = b'_1#y2l"F4Q8z\n\xec]/'
+
+# Configure db
+db = yaml.load(open('db/db.yaml'), Loader=yaml.Loader)
+app.config['MYSQL_HOST'] = db['mysql_host']
+app.config['MYSQL_USER'] = db['mysql_user']
+app.config['MYSQL_PASSWORD'] = db['mysql_password']
+app.config['MYSQL_DB'] = db['mysql_db']
+
+mysql = MySQL(app)
 
 variable = 0
 videoStart = False
 
+registers = []
+
+
+def register_tuple(dic):
+    register_list = []
+    for key, value in dic.items():
+        if key == 'paralelo':
+            register_list.append(int(value))
+        else:
+            register_list.append(value)
+
+    return tuple(register_list)
+
+
+def save_to_db():
+    global registers
+    print(registers)
+    cur = mysql.connection.cursor()
+    query = "INSERT INTO registers(fecha, curso, paralelo, horario, carrera, facultad) VALUES(%s, %s, %s, %s, %s, %s)"
+    for r in registers:
+        cur.execute(query, register_tuple(r))
+    mysql.connection.commit()
+    cur.close()
+
+
+def register_dict(arr):
+    return dict(id=arr[0],
+                hora=arr[1],
+                fecha=arr[2],
+                curso=arr[3],
+                paralelo=arr[4],
+                horario=arr[5],
+                carrera=arr[6],
+                facultad=arr[7],
+                )
+
+
+def get_db_registers():
+    cur = mysql.connection.cursor()
+    resultValue = cur.execute("SELECT * FROM registers")
+    db_registers = []
+
+    if resultValue > 0:
+        db_registers = cur.fetchall()
+
+    db_registers = list(db_registers)
+    db_registers_formatted = []
+
+    for register in db_registers:
+        r = list(register)
+        current_time = r[1]
+        hora = f"{current_time.hour}:{current_time.minute}:{current_time.second}"
+        fecha = f"{current_time.day}/{current_time.month}/{current_time.year}"
+        r.insert(2, fecha)  # Solo fecha
+        r[1] = hora  # Solo hora
+        db_registers_formatted.append(register_dict(r))
+
+    return db_registers_formatted
+
 
 @app.route('/video')
 def video():
-    return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    global registers
+    return Response(generate(registers), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     global variable
     global videoStart
+    global registers
+    videoStart = False
     if request.method == "POST":
         variable = int(request.form.get("variable"))
         videoStart = True if variable == 1 else False
+        if videoStart:
+            registers = []
+            print('video start')
+        else:
+            print('video terminado')
+            save_to_db()
     return render_template('clase.html', videoStart=videoStart)
 
 
 @app.route('/registros')
 def registros():
-    global registers
-    return render_template('registros.html', registers=registers)
+    db_registers = get_db_registers()
+    return render_template('registros.html', registers=db_registers)
 
 
 @app.route('/graficos')
 def graficos():
-    global registers
-    json_registers = {'registers': registers}
+    db_registers = get_db_registers()
+    json_registers = {'registers': db_registers}
     return render_template('graficos.html', registers=json_registers)
 
 
