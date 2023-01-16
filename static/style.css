@@ -1,6 +1,7 @@
 :root {
   --mainColor: #3080d0;
   --textColor: #404244;
+  --labelColor: #686869;
   --dangerColor: #ff6384;
 }
 
@@ -140,6 +141,7 @@ main {
 #table_section table {
   width: 1280px;
   text-align: left;
+  margin-bottom: 50px;
 }
 
 #table_section table,
@@ -161,4 +163,47 @@ main {
 
 canvas {
   width: 1280px;
+}
+
+#charts_section > div {
+  display: flex;
+  flex-direction: column;
+  padding: 30px 0;
+}
+
+#charts_section > div#general_info {
+  display: flex;
+  flex-direction: row;
+}
+
+#charts_section > div#double_chart {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+#double_chart canvas {
+  max-width: 700px;
+  max-height: 400px;
+}
+
+.mini_chart,
+.resume {
+  width: 50%;
+}
+
+.resume span {
+  display: block;
+  margin: 30px 0;
+}
+
+.resume .data {
+  font-size: 2rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+.resume .label {
+  font-size: 1rem;
+  color: var(--labelColor);
 }

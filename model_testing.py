@@ -16,7 +16,7 @@ test_ds = tf.keras.utils.image_dataset_from_directory(
     test_dir,
     labels='inferred',
     seed=100,
-    shuffle=False,
+    shuffle=True,
     image_size=(img_height, img_width),
     batch_size=batch_size)
 

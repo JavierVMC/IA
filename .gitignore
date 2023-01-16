@@ -129,3 +129,4 @@ dmypy.json
 .pyre/
 
 modelo.h5
+environment/

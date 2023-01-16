@@ -76,10 +76,10 @@ def generate(registers):
                 roi_color = frame[y:y+h, x:x+w]
                 eyes = detect_eyes(roi_gray)
                 for (ex, ey, ew, eh) in eyes:
-                    eyes_roi = roi_color[ey:ey+eh, ex:ex+ew]
+                    eye_roi = roi_color[ey:ey+eh, ex:ex+ew]
                     cv2.rectangle(roi_color, (ex, ey),
                                   (ex+ew, ey+eh), (0, 255, 0), 2)
-                    if classify(eyes_roi) == 1:
+                    if classify(eye_roi) == 1:
                         cerrados = cerrados + 1
                         saveToRegisters(registers)
                     else:

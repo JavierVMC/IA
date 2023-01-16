@@ -6,6 +6,42 @@
 {% endblock %} {% block content %}
 <h1>Graficos</h1>
 <section id="charts_section">
-  <canvas id="bar_chart"></canvas>
+  <div id="general_info">
+    <div class="resume">
+      <h2>Resumen</h2>
+      <div>
+        <span>
+          <p class="data" id="total_registers">0</p>
+          <p class="label">Total de registros</p>
+        </span>
+        <span>
+          <p class="data" id="max_registers_curso">0</p>
+          <p class="label">Curso con mas registros</p>
+        </span>
+        <span>
+          <p class="data" id="max_registers_carrera">0</p>
+          <p class="label">Carrera con mas registros</p>
+        </span>
+        <span>
+          <p class="data" id="max_registers_horario">0</p>
+          <p class="label">Horario con mas registros</p>
+        </span>
+      </div>
+    </div>
+    <div class="mini_chart">
+      <h2>Registros por carrera</h2>
+      <canvas id="polar_chart"></canvas>
+    </div>
+  </div>
+  <div id="double_chart">
+    <div>
+      <h2>Registros por materia</h2>
+      <canvas id="bar_chart"></canvas>
+    </div>
+    <div>
+      <h2>Registros por horario</h2>
+      <canvas id="line_chart"></canvas>
+    </div>
+  </div>
 </section>
 {% endblock %}
